@@ -1,6 +1,4 @@
 import streamlit as st
-import requests
-import json
 import os
 from utils import *
 import librosa
@@ -24,51 +22,41 @@ st.write(
     
 def main():
     try:
-        url = st.text_input('')
+        with st.form('Form1'):
+            url = st.text_input(label='Enter your url')
+            submitted1 = st.form_submit_button('Submit')
 
         if not url:
-            st.info("Please input the url")
+            st.warning("Please input the url")
     
         if url:
             if validate_ytb_url(url):
-                
                 st.video(url)
-                # processor = AutoProcessor.from_pretrained("datdo/wav2vec2-base-timit-demo-google-colab")
-                # model = AutoModelForCTC.from_pretrained("datdo/wav2vec2-base-timit-demo-google-colab")
-            
+                extract_audio_from_yt_video(url = url)
+                audio, rate = librosa.load("temp_audio.wav",sr=16000)
+                tokenizer = Wav2Vec2Tokenizer.from_pretrained("facebook/wav2vec2-base-960h")
+                model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h")
+                input_values = tokenizer(audio, return_tensors = "pt").input_values
+                logits = model(input_values).logits
+                prediction = torch.argmax(logits, dim = -1)
+                transcription = tokenizer.batch_decode(prediction)[0]
+                with st.expander("View Transcript"):
+                    button = st.download_button( label="Download Transcript",
+                                                        data = transcription,
+                                                        file_name="transcript.txt",)
+                    st.info(transcription)
+                    if button:
+                        envir_var = os.environ
+                        user_loc = envir_var.get('USERPROFILE')
+                        loc = user_loc+"\Downloads\\transcript.txt"
+                        with open(loc,'w') as video_file:
+                            video_file.write(transcription)
             else:
                 st.warning('please check your input link', icon="⚠️")
 
-        audio, rate = librosa.load("The_National_Park.wav",sr=16000)
-
-
-        tokenizer = Wav2Vec2Tokenizer.from_pretrained("facebook/wav2vec2-base-960h")
-        model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h")
-
-        input_values = tokenizer(audio, return_tensors = "pt").input_values
-
-        logits = model(input_values).logits
-
-        prediction = torch.argmax(logits, dim = -1)
-
-        transcription = tokenizer.batch_decode(prediction)[0]
-
-
-
-        with st.expander("View Transcript"):
-            button = st.download_button( label="Download Transcript",
-                                                data = transcription,
-                                                file_name="transcript.txt",)
-            st.info(transcription)
-            if button:
-                envir_var = os.environ
-                user_loc = envir_var.get('USERPROFILE')
-                loc = user_loc+"\Downloads\\transcript.txt"
-                with open(loc,'w') as video_file:
-                    video_file.write(transcription)
-
-    except:
-        st.error(f"""Something went wrong""", icon="⚠️")
+        
+    except Exception as e:
+        st.error(f"""Faced issue: {e}""", icon="⚠️")
 
     
 

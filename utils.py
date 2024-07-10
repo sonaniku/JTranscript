@@ -31,9 +31,6 @@ def extract_audio_from_yt_video(url):
         print("\nAudio has been downloaded. Path is :", filename)
 
     # Handle DownloadError case
-    except DownloadError as err:
-        # With the default video below, you should not have any problem. But DownloadError can occur with some videos, do not forget to handle it!
-        print(err)
-        print("\nAudio has not been downloaded. Error occured, please retry.")
-        
-    return filename
+    except Exception as e:
+        raise Exception(f"""Dowload failed due to: {e}""")
+
