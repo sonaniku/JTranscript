@@ -4,7 +4,8 @@ import os
 from utils import *
 import librosa
 import torch
-from transformers import Wav2Vec2ForCTC, Wav2Vec2Tokenizer, AutoModelForCTC, Wav2Vec2Processor, AutoProcessor
+import ffmpeg
+from transformers import AutoModelForCTC, AutoProcessor
 
 st.set_page_config(page_title="Speech to Text Transcription App", page_icon=":desktop_computer:")
 
@@ -37,15 +38,22 @@ def main():
                 with st.spinner('Extracting video...'):
                     video =  extract_audio_from_yt_video(url)
                     time.sleep(5)
+                st.success("Extracted successfully")
 
                 if os.path.exists(video):
                     audio, rate = librosa.load(video,sr=16000)
-                    tokenizer = AutoProcessor.from_pretrained("patrickvonplaten/wav2vec2-base-timit-demo-google-colab")
-                    model = AutoModelForCTC.from_pretrained("patrickvonplaten/wav2vec2-base-timit-demo-google-colab")
+                    tokenizer = AutoProcessor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+                    model = AutoModelForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
                     input_values = tokenizer(audio, return_tensors = "pt").input_values
                     logits = model(input_values).logits
                     prediction = torch.argmax(logits, dim = -1)
                     transcription = tokenizer.batch_decode(prediction)[0]
+                    word_start_times, word_end_times, words = get_timestamp_for_each_world(tokenizer, input_values, rate, prediction, transcription) 
+                    csv_file = write_to_csv(word_start_times, word_end_times, words)
+                    srt_data = generate_srt(csv_file)
+                    with open(f"transcript.srt", "w") as srt_file:
+                        for row in srt_data:
+                            srt_file.write(row)
                     with st.expander("View Transcript"):
                         button = st.download_button( label="Download Transcript",
                                                             data = transcription,
