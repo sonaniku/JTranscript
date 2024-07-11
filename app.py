@@ -36,10 +36,10 @@ def main():
 
                 with st.spinner('Extracting video...'):
                     video =  extract_audio_from_yt_video(url)
-                    audio, rate = librosa.load(video,sr=16000)
                     time.sleep(5)
 
                 if os.path.exists(video):
+                    audio, rate = librosa.load(video,sr=16000)
                     tokenizer = AutoProcessor.from_pretrained("patrickvonplaten/wav2vec2-base-timit-demo-google-colab")
                     model = AutoModelForCTC.from_pretrained("patrickvonplaten/wav2vec2-base-timit-demo-google-colab")
                     input_values = tokenizer(audio, return_tensors = "pt").input_values
