@@ -10,7 +10,7 @@ def validate_ytb_url(url:str)-> bool:
 
 def extract_audio_from_yt_video(url):
     # Create a file name based on the video's URL
-    filename = r"yt_dl_" + url[-11:] + ".wav"
+    filename = r"yt_dl_" + url[-11:]
     # Extract the audio from the video 
     try:
         # Settings
@@ -20,11 +20,13 @@ def extract_audio_from_yt_video(url):
             'outtmpl': filename,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'wav',
+                'preferredquality': '192',
             }],
             'compat-options': 'no-certifi',
             'no-check-certificates': True,
         }
-        # Download
+        # DownloadS
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         
@@ -33,4 +35,6 @@ def extract_audio_from_yt_video(url):
     # Handle DownloadError case
     except Exception as e:
         raise Exception(f"""Dowload failed due to: {e}""")
+    
+    return filename+'.wav'
 
