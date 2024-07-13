@@ -3,6 +3,7 @@ import yt_dlp
 import pandas as pd
 from itertools import groupby
 import tokenizers
+import time
 import csv
 
 def validate_ytb_url(url:str)-> bool:
@@ -60,10 +61,16 @@ def get_timestamp_for_each_world(tokenizer, input_values, rate, prediction, tran
         
     return word_start_times, word_end_times, words
 
+def formattedtime(seconds):
+    final_time = time.strftime("%H:%M:%S", time.gmtime(float(seconds)))
+    return f"{final_time},{seconds.split('.')[1]}"
 
 def write_to_csv(word_start_times, word_end_times, words):
     csv_file = "transcript.csv"
-    df = pd.DataFrame({'start_times': word_start_times, 'end_time': word_end_times, 'text': words})
+    
+    start = [formattedtime(format(i, ".3f")) for i in word_start_times]
+    end = [formattedtime(format(i, ".3f")) for i in word_end_times]
+    df = pd.DataFrame({'start_times': start, 'end_time': end, 'text': words})
     df.to_csv(csv_file, encoding='utf-8', index=False, header=True)
     return csv_file
 

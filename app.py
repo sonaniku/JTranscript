@@ -7,7 +7,7 @@ import torch
 import ffmpeg
 from transformers import AutoModelForCTC, AutoProcessor
 
-st.set_page_config(page_title="Speech to Text Transcription App", page_icon=":desktop_computer:")
+st.set_page_config(page_title="Speech to Text Transcription App", page_icon=":desktop_computer:", layout="wide")
 
 st.text("")
 st.image(
@@ -41,7 +41,7 @@ def main():
                 st.success("Extracted successfully")
 
                 if os.path.exists(video):
-                    audio, rate = librosa.load(video,sr=16000)
+                    audio, rate = librosa.load("yt_dl_BI3yTjBI3ag.mp3",sr=16000)
                     tokenizer = AutoProcessor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
                     model = AutoModelForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
                     input_values = tokenizer(audio, return_tensors = "pt").input_values
@@ -54,6 +54,8 @@ def main():
                     with open(f"transcript.srt", "w") as srt_file:
                         for row in srt_data:
                             srt_file.write(row)
+                            
+
                     with st.expander("View Transcript"):
                         button = st.download_button( label="Download Transcript",
                                                             data = transcription,
@@ -67,8 +69,6 @@ def main():
                                 video_file.write(transcription)
             else:
                 st.warning('please check your input link', icon="⚠️")
-
-        
     except Exception as e:
         st.error(f"""Faced issue: {e}""", icon="⚠️")
 
